@@ -9,6 +9,7 @@ build:
   # Defaults are darwin and linux
   goos:
     - linux
+    - darwin
 
   # GOARCH to build in.
   # For more info refer to https://golang.org/doc/install/source#environment
@@ -66,7 +67,7 @@ dockers:
     goarm: 6
     binary: iotweb
     image: cjimti/asws
-    dockerfile: dockerfile/armhf/Dockerfile
+    dockerfile: dockerfile/arm/Dockerfile
     extra_files:
     - www
     - files

@@ -53,7 +53,7 @@ dockers:
     goos: linux
     goarch: amd64
     goarm: ''
-    binary: iotweb
+    binary: asws
     image: cjimti/asws
     dockerfile: dockerfile/amd64/Dockerfile
     extra_files:
@@ -65,7 +65,7 @@ dockers:
     goos: linux
     goarch: arm
     goarm: 6
-    binary: iotweb
+    binary: asws
     image: cjimti/asws
     dockerfile: dockerfile/arm/Dockerfile
     extra_files:

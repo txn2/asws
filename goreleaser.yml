@@ -55,7 +55,7 @@ dockers:
     goarm: ''
     binary: asws
     image: cjimti/asws
-    dockerfile: dockerfile/amd64/Dockerfile
+    dockerfile: dockerfiles/amd64/Dockerfile
     extra_files:
     - www
     - files
@@ -67,7 +67,7 @@ dockers:
     goarm: 6
     binary: asws
     image: cjimti/asws
-    dockerfile: dockerfile/arm/Dockerfile
+    dockerfile: dockerfiles/arm/Dockerfile
     extra_files:
     - www
     - files

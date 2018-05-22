@@ -7,6 +7,7 @@ RUN go get ...
 RUN CGO_ENABLED=0 go build -a -installsuffix cgo -o /go/bin/asws ./src/github.com/txn2/asws
 
 FROM alpine:3.7
+RUN apk update
 RUN apk --no-cache add ca-certificates
 COPY --from=aswsbuilder /go/bin/asws /asws
 

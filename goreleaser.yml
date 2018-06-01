@@ -61,15 +61,15 @@ dockers:
     - files
     tag_templates:
     - "{{ .Version }}"
-#  -
-#    goos: linux
-#    goarch: arm
-#    goarm: 6
-#    binary: asws
-#    image: txn2/asws
-#    dockerfile: dockerfiles/arm/Dockerfile
-#    extra_files:
-#    - www
-#    - files
-#    tag_templates:
-#    - "armhf-{{ .Version }}"
+  -
+    goos: linux
+    goarch: arm
+    goarm: 6
+    binary: asws
+    image: txn2/asws
+    dockerfile: dockerfiles/arm/Dockerfile
+    extra_files:
+    - www
+    - files
+    tag_templates:
+    - "armhf-{{ .Version }}"

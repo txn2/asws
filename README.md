@@ -5,7 +5,7 @@
 The following example exposes port 2701 on your local machine and forwards all traffic to port 80 on the [asws docker container]:
 
 ```bash
-docker run -e DEBUG=true -p 2701:80 -v "$(pwd)"/www:/www txn2/asws:1.2.2
+docker run -e DEBUG=true -p 2701:80 -v "$(pwd)"/www:/www txn2/asws:1.2.3
 ```
 
 ## Environment Variable Defaults

@@ -2,7 +2,7 @@
 build:
   # Path to main.go file.
   # Default is `main.go`
-  main: ./server.go
+  main: ./cmd/asws.go
 
   # GOOS list to build in.
   # For more info refer to https://golang.org/doc/install/source#environment

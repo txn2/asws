@@ -159,16 +159,15 @@ func (c *Context) Error(err error) *Error {
 	if err == nil {
 		panic("err is nil")
 	}
-	var parsedError *Error
-	switch err.(type) {
-	case *Error:
-		parsedError = err.(*Error)
-	default:
+
+	parsedError, ok := err.(*Error)
+	if !ok {
 		parsedError = &Error{
 			Err:  err,
 			Type: ErrorTypePrivate,
 		}
 	}
+
 	c.Errors = append(c.Errors, parsedError)
 	return parsedError
 }
@@ -361,6 +360,18 @@ func (c *Context) GetQueryArray(key string) ([]string, bool) {
 	return []string{}, false
 }
 
+// QueryMap returns a map for a given query key.
+func (c *Context) QueryMap(key string) map[string]string {
+	dicts, _ := c.GetQueryMap(key)
+	return dicts
+}
+
+// GetQueryMap returns a map for a given query key, plus a boolean value
+// whether at least one value exists for the given key.
+func (c *Context) GetQueryMap(key string) (map[string]string, bool) {
+	return c.get(c.Request.URL.Query(), key)
+}
+
 // PostForm returns the specified key from a POST urlencoded form or multipart form
 // when it exists, otherwise it returns an empty string `("")`.
 func (c *Context) PostForm(key string) string {
@@ -414,6 +425,42 @@ func (c *Context) GetPostFormArray(key string) ([]string, bool) {
 		}
 	}
 	return []string{}, false
+}
+
+// PostFormMap returns a map for a given form key.
+func (c *Context) PostFormMap(key string) map[string]string {
+	dicts, _ := c.GetPostFormMap(key)
+	return dicts
+}
+
+// GetPostFormMap returns a map for a given form key, plus a boolean value
+// whether at least one value exists for the given key.
+func (c *Context) GetPostFormMap(key string) (map[string]string, bool) {
+	req := c.Request
+	req.ParseForm()
+	req.ParseMultipartForm(c.engine.MaxMultipartMemory)
+	dicts, exist := c.get(req.PostForm, key)
+
+	if !exist && req.MultipartForm != nil && req.MultipartForm.File != nil {
+		dicts, exist = c.get(req.MultipartForm.Value, key)
+	}
+
+	return dicts, exist
+}
+
+// get is an internal method and returns a map which satisfy conditions.
+func (c *Context) get(m map[string][]string, key string) (map[string]string, bool) {
+	dicts := make(map[string]string)
+	exist := false
+	for k, v := range m {
+		if i := strings.IndexByte(k, '['); i >= 1 && k[0:i] == key {
+			if j := strings.IndexByte(k[i+1:], ']'); j >= 1 {
+				exist = true
+				dicts[k[i+1:][:j]] = v[0]
+			}
+		}
+	}
+	return dicts, exist
 }
 
 // FormFile returns the first file for the provided form key.
@@ -474,7 +521,7 @@ func (c *Context) BindQuery(obj interface{}) error {
 // See the binding package.
 func (c *Context) MustBindWith(obj interface{}, b binding.Binding) (err error) {
 	if err = c.ShouldBindWith(obj, b); err != nil {
-		c.AbortWithError(400, err).SetType(ErrorTypeBind)
+		c.AbortWithError(http.StatusBadRequest, err).SetType(ErrorTypeBind)
 	}
 
 	return
@@ -539,14 +586,10 @@ func (c *Context) ShouldBindBodyWith(
 func (c *Context) ClientIP() string {
 	if c.engine.ForwardedByClientIP {
 		clientIP := c.requestHeader("X-Forwarded-For")
-		if index := strings.IndexByte(clientIP, ','); index >= 0 {
-			clientIP = clientIP[0:index]
+		clientIP = strings.TrimSpace(strings.Split(clientIP, ",")[0])
+		if clientIP == "" {
+			clientIP = strings.TrimSpace(c.requestHeader("X-Real-Ip"))
 		}
-		clientIP = strings.TrimSpace(clientIP)
-		if clientIP != "" {
-			return clientIP
-		}
-		clientIP = strings.TrimSpace(c.requestHeader("X-Real-Ip"))
 		if clientIP != "" {
 			return clientIP
 		}
@@ -593,9 +636,9 @@ func bodyAllowedForStatus(status int) bool {
 	switch {
 	case status >= 100 && status <= 199:
 		return false
-	case status == 204:
+	case status == http.StatusNoContent:
 		return false
-	case status == 304:
+	case status == http.StatusNotModified:
 		return false
 	}
 	return true
@@ -699,13 +742,24 @@ func (c *Context) SecureJSON(code int, obj interface{}) {
 // It add padding to response body to request data from a server residing in a different domain than the client.
 // It also sets the Content-Type as "application/javascript".
 func (c *Context) JSONP(code int, obj interface{}) {
-	c.Render(code, render.JsonpJSON{Callback: c.DefaultQuery("callback", ""), Data: obj})
+	callback := c.DefaultQuery("callback", "")
+	if callback == "" {
+		c.Render(code, render.JSON{Data: obj})
+	} else {
+		c.Render(code, render.JsonpJSON{Callback: callback, Data: obj})
+	}
 }
 
 // JSON serializes the given struct as JSON into the response body.
 // It also sets the Content-Type as "application/json".
 func (c *Context) JSON(code int, obj interface{}) {
 	c.Render(code, render.JSON{Data: obj})
+}
+
+// AsciiJSON serializes the given struct as JSON into the response body with unicode to ASCII string.
+// It also sets the Content-Type as "application/json".
+func (c *Context) AsciiJSON(code int, obj interface{}) {
+	c.Render(code, render.AsciiJSON{Data: obj})
 }
 
 // XML serializes the given struct as XML into the response body.
@@ -840,18 +894,33 @@ func (c *Context) SetAccepted(formats ...string) {
 /***** GOLANG.ORG/X/NET/CONTEXT *****/
 /************************************/
 
+// Deadline returns the time when work done on behalf of this context
+// should be canceled. Deadline returns ok==false when no deadline is
+// set. Successive calls to Deadline return the same results.
 func (c *Context) Deadline() (deadline time.Time, ok bool) {
 	return
 }
 
+// Done returns a channel that's closed when work done on behalf of this
+// context should be canceled. Done may return nil if this context can
+// never be canceled. Successive calls to Done return the same value.
 func (c *Context) Done() <-chan struct{} {
 	return nil
 }
 
+// Err returns a non-nil error value after Done is closed,
+// successive calls to Err return the same error.
+// If Done is not yet closed, Err returns nil.
+// If Done is closed, Err returns a non-nil error explaining why:
+// Canceled if the context was canceled
+// or DeadlineExceeded if the context's deadline passed.
 func (c *Context) Err() error {
 	return nil
 }
 
+// Value returns the value associated with this context for key, or nil
+// if no value is associated with key. Successive calls to Value with
+// the same key returns the same result.
 func (c *Context) Value(key interface{}) interface{} {
 	if key == 0 {
 		return c.Request

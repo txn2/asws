@@ -1,4 +1,4 @@
-FROM arm32v6/alpine:3.6
+FROM arm32v6/alpine:3.8
 RUN mkdir /www && mkdir /files
 COPY www/index.html www/index.html
 COPY files/README.txt files/README.txt

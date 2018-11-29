@@ -1,16 +1,31 @@
-FROM golang:1.10.2 AS aswsbuilder
+FROM golang:1.11.2-alpine3.8 AS builder
 
-RUN mkdir -p /go/src/github.com/txn2/asws
-COPY . /go/src/github.com/txn2/asws
+RUN apk update \
+ && apk add git
 
-RUN go get ...
-RUN CGO_ENABLED=0 go build -a -installsuffix cgo -o /go/bin/asws ./src/github.com/txn2/asws
+RUN mkdir -p /go/src \
+ && mkdir -p /go/bin \
+ && mkdir -p /go/pkg
 
-FROM alpine:3.7
-RUN apk update
+ENV GOPATH=/go
+ENV PATH=$GOPATH/bin:$PATH
+ENV PROJECT=$GOPATH/src/gitlab.com/txn2/asws
+
+RUN mkdir -p $PROJECT
+
+WORKDIR $PROJECT
+
+ADD . .
+
+# all deps should be in vendor except json-iterator
+RUN go get github.com/json-iterator/go
+RUN CGO_ENABLED=0 go build -tags=jsoniter -a -installsuffix cgo -o /go/bin/asws $PROJECT/cmd/asws.go
+
+FROM alpine:3.8
 RUN apk --no-cache add ca-certificates
-COPY --from=aswsbuilder /go/bin/asws /asws
+
+COPY --from=builder /go/bin/ops /bin/ops
 
 WORKDIR /
 
-ENTRYPOINT ["/asws"]
+ENTRYPOINT ["asws"]

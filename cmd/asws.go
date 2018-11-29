@@ -1,13 +1,15 @@
 package main
 
 import (
+	"log"
 	"net/http"
 	"os"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+
 	"github.com/gin-contrib/zap"
 	"github.com/gin-gonic/gin"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
 )
 
@@ -21,6 +23,7 @@ func main() {
 	fsPath := getEnv("FS_PATH", "/files")
 	debug := getEnv("DEBUG", "false")
 	metrics := getEnv("METRICS", "true")
+	metricsPort := getEnv("METRICS_PORT", "9696")
 
 	gin.SetMode(gin.ReleaseMode)
 
@@ -46,9 +49,14 @@ func main() {
 
 	// Prometheus Metrics
 	if metrics == "true" {
-		r.GET("/metrics", gin.WrapH(promhttp.Handler()))
+		go func() {
+			http.Handle("/metrics", promhttp.Handler())
+			log.Fatal(http.ListenAndServe(":"+metricsPort, nil))
+			r.GET("/metrics", gin.WrapH(promhttp.Handler()))
+		}()
 	}
 
+	// Gin web server
 	err := r.Run(":" + port)
 	if err != nil {
 		logger.Fatal(err.Error())

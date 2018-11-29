@@ -20,6 +20,7 @@ func main() {
 	fsDir := getEnv("FS_DIR", "./files")
 	fsPath := getEnv("FS_PATH", "/files")
 	debug := getEnv("DEBUG", "false")
+	metrics := getEnv("METRICS", "true")
 
 	gin.SetMode(gin.ReleaseMode)
 
@@ -44,7 +45,9 @@ func main() {
 	r.Static(staticPath, staticDir)
 
 	// Prometheus Metrics
-	r.GET("/metrics", gin.WrapH(promhttp.Handler()))
+	if metrics == "true" {
+		r.GET("/metrics", gin.WrapH(promhttp.Handler()))
+	}
 
 	err := r.Run(":" + port)
 	if err != nil {

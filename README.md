@@ -17,6 +17,7 @@ docker run -e DEBUG=true -p 2701:80 -v "$(pwd)"/www:/www txn2/asws:1.2.2
 - FS_DIR="./files"
 - FS_PATH="/files"
 - DEBUG="false"
+- METRICS="true"
 
 
 ### Build Release

@@ -24,7 +24,7 @@ RUN CGO_ENABLED=0 go build -tags=jsoniter -a -installsuffix cgo -o /go/bin/asws 
 FROM alpine:3.8
 RUN apk --no-cache add ca-certificates
 
-COPY --from=builder /go/bin/ops /bin/ops
+COPY --from=builder /go/bin/asws /bin/asws
 
 WORKDIR /
 

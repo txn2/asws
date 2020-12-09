@@ -5,5 +5,6 @@ COPY files/README.txt files/README.txt
 COPY asws /
 
 WORKDIR /
+USER nobody
 
 CMD ["/asws"]

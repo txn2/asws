@@ -1,75 +1,117 @@
-# Build customization
-build:
-  # Path to main.go file.
-  # Default is `main.go`
-  main: ./cmd/asws.go
+env:
+  - GO111MODULE=on
+  - GOPROXY=https://gocenter.io
+before:
+  hooks:
+    - go mod download
 
-  # GOOS list to build in.
-  # For more info refer to https://golang.org/doc/install/source#environment
-  # Defaults are darwin and linux
-  goos:
-    - linux
-    - darwin
+builds:
+  - id: asws
+    main: ./cmd/asws.go
+    binary: asws
+    goos:
+      - linux
+      - darwin
+    goarch:
+      - 386
+      - amd64
+      - arm
+      - arm64
+    goarm:
+      - 6
 
-  # GOARCH to build in.
-  # For more info refer to https://golang.org/doc/install/source#environment
-  # Defaults are 386 and amd64
-  goarch:
-    - amd64
-    - arm
+checksum:
+  name_template: '{{ .ProjectName }}_checksums.txt'
 
-# Archive customization
-archive:
-  # You can change the name of the archive.
-  # This is parsed with Golang template engine and the following variables.
-  name_template: "{{.ProjectName}}_{{.Os}}_{{.Arch}}"
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+      - Merge pull request
+      - Merge branch
+      - go mod tidy
 
-  # Archive format. Valid options are `tar.gz` and `zip`.
-  # Default is `zip`
-  format: tar.gz
+archives:
+  - name_template: '{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}'
+    replacements:
+      darwin: Darwin
+      linux: Linux
+      windows: Windows
+      386: i386
+      amd64: x86_64
+    format_overrides:
+      - goos: windows
+        format: zip
+    files:
+      - LICENSE
+      - www/index.html
+      - files/README.txt
 
-  # Replacements for GOOS and GOARCH on the archive name.
-  # The keys should be valid GOOS or GOARCH values followed by your custom
-  # replacements.
-  # By default, `replacements` replace GOOS and GOARCH values with valid outputs
-  # of `uname -s` and `uname -m` respectively.
-  replacements:
-    arm: armhf
-    amd64: amd64
-    386: 386
-    darwin: macOS
-    linux: linux
+nfpms:
+  - file_name_template: '{{ .ProjectName }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}'
+    homepage:  https://github.com/txn2/asws
+    description: Statis web server.
+    maintainer: Craig Johnston https://twitter.com/cjimti
+    license: Apache 2.0
+    vendor: https://github.com/txn2
+    formats:
+      - apk
+      - deb
+      - rpm
 
-  # Additional files you want to add to the archive.
-  # Defaults are any files matching `LICENCE*`, `LICENSE*`,
-  # `README*` and `CHANGELOG*` (case-insensitive)
-  files:
-    - LICENSE
-    - www/index.html
-    - files/README.txt
+release:
+  github:
+    owner: txn2
+    name: asws
+  name_template: "{{.ProjectName}}-v{{.Version}} {{.Env.USER}}"
 
 dockers:
   -
     goos: linux
     goarch: amd64
     goarm: ''
-    binary: asws
-    image: txn2/asws
+    binaries:
+      - asws
     dockerfile: dockerfiles/amd64/Dockerfile
+    builds:
+      - asws
     extra_files:
-    - www
-    - files
-    tag_templates:
-    - "{{ .Version }}"
-  -
-    goos: linux
-    goarch: arm
-    goarm: 6
-    binary: asws
-    image: txn2/asws
-    dockerfile: dockerfiles/arm/Dockerfile
-    extra_files:
-    - www
-    - files
-    tag_templates:
-    - "armhf-{{ .Version }}"
+      - www
+      - files
+    image_templates:
+      - "txn2/asws:latest"
+      - "txn2/asws:{{ .Tag }}"
+      - "txn2/asws:v{{ .Major }}"
+      - "txn2/asws:amd64-{{ .Tag }}"
+      - "txn2/asws:amd64-v{{ .Major }}"
+      - "txn2/asws:latest_alpine-3"
+      - "txn2/asws:{{ .Tag }}_alpine-3"
+      - "txn2/asws:v{{ .Major }}_alpine-3"
+      - "txn2/asws:amd64-{{ .Tag }}_alpine-3"
+      - "txn2/asws:amd64-v{{ .Major }}_alpine-3"
+    build_flag_templates:
+      - "--label=org.label-schema.schema-version=1.0"
+      - "--label=org.label-schema.version={{.Version}}"
+      - "--label=org.label-schema.name={{.ProjectName}}"
+#  -
+#    goos: linux
+#    goarch: arm
+#    goarm: 6
+#    binaries:
+#      - asws
+#    dockerfile: dockerfiles/arm/Dockerfile
+#    builds:
+#      - asws
+#    extra_files:
+#      - www
+#      - files
+#    image_templates:
+#      - "txn2/asws:armhf-latest"
+#      - "txn2/asws:armhf-{{ .Tag }}"
+#      - "txn2/asws:armhf-v{{ .Major }}"
+#    build_flag_templates:
+#      - "--label=org.label-schema.schema-version=1.0"
+#      - "--label=org.label-schema.version={{.Version}}"
+#      - "--label=org.label-schema.name={{.ProjectName}}"

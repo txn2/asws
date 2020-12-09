@@ -39,7 +39,6 @@ FROM scratch
 ENV IP=0.0.0.0
 ENV PATH=/bin
 
-COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /etc_passwd /etc/passwd
 COPY --from=builder /www/index.html /www/index.html
 COPY --from=builder /files/README.txt /files/README.txt

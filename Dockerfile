@@ -36,6 +36,7 @@ COPY files/README.txt /files/README.txt
 
 FROM scratch
 
+ENV IP=0.0.0.0
 ENV PATH=/bin
 
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/

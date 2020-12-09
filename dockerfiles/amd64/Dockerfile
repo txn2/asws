@@ -5,6 +5,8 @@ COPY www/index.html www/index.html
 COPY files/README.txt files/README.txt
 COPY asws /bin/asws
 
+RUN echo "nobody:x:65534:65534:Nobody:/:" > /etc_passwd
+
 WORKDIR /
 
 FROM scratch
@@ -13,7 +15,8 @@ ENV PATH=/bin
 
 WORKDIR /
 
-COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+ENV IP=0.0.0.0
+
 COPY --from=builder /etc_passwd /etc/passwd
 COPY --from=builder /www/index.html /www/index.html
 COPY --from=builder /files/README.txt /files/README.txt

@@ -18,7 +18,7 @@ import (
 
 var (
 	ipEnv          = getEnv("IP", "127.0.0.1")
-	portEnv        = getEnv("PORT", "80")
+	portEnv        = getEnv("PORT", "8080")
 	staticDirEnv   = getEnv("STATIC_DIR", "./www")
 	staticPathEnv  = getEnv("STATIC_PATH", "/")
 	fsEnabledEnv   = getEnv("FS_ENABLED", "no")

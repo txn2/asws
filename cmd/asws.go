@@ -98,7 +98,20 @@ func main() {
 			return
 		}
 
-		c.File(*notFoundFile)
+		content, err := os.ReadFile(*notFoundFile)
+		if err != nil {
+			logger.Error("404 content not found", zap.String("file", *notFoundFile))
+			c.String(http.StatusNotFound, http.StatusText(http.StatusNotFound))
+			return
+		}
+
+		c.Writer.WriteHeader(http.StatusNotFound)
+		_, err = c.Writer.Write(content)
+		if err != nil {
+			logger.Error("404 write error", zap.Error(err))
+			c.String(http.StatusNotFound, http.StatusText(http.StatusNotFound))
+			return
+		}
 	})
 
 	// metrics server (run in go routine)

@@ -2,7 +2,7 @@ ARG app=asws
 ARG project=github.com/txn2/asws
 ARG buildsrc=./cmd/asws.go
 
-FROM golang:1.15.2-alpine3.12 AS builder
+FROM golang:1.17.3-stretch AS builder
 
 ARG app
 ARG project

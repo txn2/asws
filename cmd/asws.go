@@ -17,16 +17,19 @@ import (
 )
 
 var (
-	ipEnv          = getEnv("IP", "127.0.0.1")
-	portEnv        = getEnv("PORT", "8080")
-	staticDirEnv   = getEnv("STATIC_DIR", "./www")
-	staticPathEnv  = getEnv("STATIC_PATH", "/")
-	fsEnabledEnv   = getEnv("FS_ENABLED", "no")
-	fsDirEnv       = getEnv("FS_DIR", "./files")
-	fsPathEnv      = getEnv("FS_PATH", "/files")
-	debugEnv       = getEnv("DEBUG", "false")
-	metricsEnv     = getEnv("METRICS", "true")
-	metricsPortEnv = getEnv("METRICS_PORT", "2112")
+	ipEnv                   = getEnv("IP", "127.0.0.1")
+	portEnv                 = getEnv("PORT", "8080")
+	staticDirEnv            = getEnv("STATIC_DIR", "./www")
+	staticPathEnv           = getEnv("STATIC_PATH", "/")
+	notFoundRedirectEnv     = getEnv("NOT_FOUND_REDIRECT", "false")
+	notFoundRedirectPathEnv = getEnv("NOT_FOUND_REDIRECT_PATH", "/")
+	notFoundFileEnv         = getEnv("NOT_FOUND_FILE", "./www/404.html")
+	fsEnabledEnv            = getEnv("FS_ENABLED", "false")
+	fsDirEnv                = getEnv("FS_DIR", "./files")
+	fsPathEnv               = getEnv("FS_PATH", "/files")
+	debugEnv                = getEnv("DEBUG", "false")
+	metricsEnv              = getEnv("METRICS", "true")
+	metricsPortEnv          = getEnv("METRICS_PORT", "2112")
 )
 
 var Version = "0.0.0"
@@ -35,16 +38,19 @@ var Service = "asws"
 func main() {
 
 	var (
-		ip          = flag.String("ip", ipEnv, "bind ip")
-		port        = flag.String("port", portEnv, "port")
-		staticDir   = flag.String("staticDir", staticDirEnv, "static dir")
-		staticPath  = flag.String("staticPath", staticPathEnv, "static path")
-		fsEnabled   = flag.String("fsEnabled", fsEnabledEnv, "filesystem enabled")
-		fsDir       = flag.String("fsDir", fsDirEnv, "filesystem directory")
-		fsPath      = flag.String("fsPath", fsPathEnv, "filesystem path")
-		debug       = flag.String("debug", debugEnv, "debug")
-		metrics     = flag.String("metrics", metricsEnv, "metrics")
-		metricsPort = flag.String("metricsPort", metricsPortEnv, "metrics port")
+		ip                   = flag.String("ip", ipEnv, "bind ip")
+		port                 = flag.String("port", portEnv, "port")
+		staticDir            = flag.String("staticDir", staticDirEnv, "static dir")
+		staticPath           = flag.String("staticPath", staticPathEnv, "static path")
+		notFoundRedirect     = flag.String("notFoundRedirect", notFoundRedirectEnv, "redirect on not found?")
+		notFoundRedirectPath = flag.String("notFoundRedirectPath", notFoundRedirectPathEnv, "not found redirect path")
+		notFoundFile         = flag.String("notFoundFile", notFoundFileEnv, "not found file to serve")
+		fsEnabled            = flag.String("fsEnabled", fsEnabledEnv, "filesystem enabled")
+		fsDir                = flag.String("fsDir", fsDirEnv, "filesystem directory")
+		fsPath               = flag.String("fsPath", fsPathEnv, "filesystem path")
+		debug                = flag.String("debug", debugEnv, "debug")
+		metrics              = flag.String("metrics", metricsEnv, "metrics")
+		metricsPort          = flag.String("metricsPort", metricsPortEnv, "metrics port")
 	)
 	flag.Parse()
 
@@ -79,11 +85,21 @@ func main() {
 
 	r.Use(ginzap.Ginzap(logger, time.RFC3339, true))
 
-	if *fsEnabled == "yes" {
+	if *fsEnabled == "true" {
 		r.StaticFS(*fsPath, http.Dir(*fsDir))
 	}
 
 	r.Static(*staticPath, *staticDir)
+
+	r.NoRoute(func(c *gin.Context) {
+		if *notFoundRedirect == "true" {
+			c.Redirect(http.StatusTemporaryRedirect, *notFoundRedirectPath)
+			c.Abort()
+			return
+		}
+
+		c.File(*notFoundFile)
+	})
 
 	// metrics server (run in go routine)
 	if *metrics == "true" {

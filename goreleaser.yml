@@ -79,11 +79,9 @@ dockers:
     goos: linux
     goarch: amd64
     goarm: ''
-    binaries:
+    ids:
       - asws
     dockerfile: dockerfiles/amd64/Dockerfile
-    builds:
-      - asws
     extra_files:
       - www
       - files

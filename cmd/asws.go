@@ -30,8 +30,8 @@ var (
 	debugEnv                = getEnv("DEBUG", "false")
 	metricsEnv              = getEnv("METRICS", "true")
 	metricsPortEnv          = getEnv("METRICS_PORT", "2112")
-	webAppNameEnv           = getEnv("WEB_APP_NAME", "")
-	webAppVersionEnv        = getEnv("WEB_APP_VERSION", "")
+	appNameEnv              = getEnv("APP_NAME", "")
+	appVersionEnv           = getEnv("APP_VERSION", "")
 )
 
 var Version = "0.0.0"
@@ -53,8 +53,8 @@ func main() {
 		debug                = flag.String("debug", debugEnv, "debug")
 		metrics              = flag.String("metrics", metricsEnv, "metrics")
 		metricsPort          = flag.String("metricsPort", metricsPortEnv, "metrics port")
-		webAppName           = flag.String("webAppVersion", webAppNameEnv, "web app name (for logging)")
-		webAppVersion        = flag.String("webAppVersion", webAppVersionEnv, "web app version (for logging)")
+		appName              = flag.String("appName", appNameEnv, "web app name (for logging)")
+		appVersion           = flag.String("appVersion", appVersionEnv, "web app version (for logging)")
 	)
 	flag.Parse()
 
@@ -89,8 +89,8 @@ func main() {
 
 	logger := baseLogger.With(
 		zap.String("asws_version", Version),
-		zap.Stringp("web_app_name", webAppName),
-		zap.Stringp("web_app_version", webAppVersion),
+		zap.Stringp("app", appName),
+		zap.Stringp("version", appVersion),
 	)
 
 	r.Use(ginzap.Ginzap(logger, time.RFC3339, true))

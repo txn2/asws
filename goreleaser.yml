@@ -65,7 +65,7 @@ dockers:
     goarm: ''
     ids:
       - asws
-    dockerfile: dockerfiles/amd64/Dockerfile
+    dockerfile: dockerfiles/scratch/Dockerfile
     extra_files:
       - www
       - files
@@ -73,34 +73,29 @@ dockers:
       - "txn2/asws:latest"
       - "txn2/asws:{{ .Tag }}"
       - "txn2/asws:v{{ .Major }}"
-      - "txn2/asws:amd64-{{ .Tag }}"
-      - "txn2/asws:amd64-v{{ .Major }}"
-      - "txn2/asws:latest_alpine-3"
-      - "txn2/asws:{{ .Tag }}_alpine-3"
-      - "txn2/asws:v{{ .Major }}_alpine-3"
-      - "txn2/asws:amd64-{{ .Tag }}_alpine-3"
-      - "txn2/asws:amd64-v{{ .Major }}_alpine-3"
+      - "txn2/asws:latest-scratch"
+      - "txn2/asws:{{ .Tag }}-scratch"
+      - "txn2/asws:v{{ .Major }}-scratch"
     build_flag_templates:
       - "--label=org.label-schema.schema-version=1.0"
       - "--label=org.label-schema.version={{.Version}}"
       - "--label=org.label-schema.name={{.ProjectName}}"
-#  -
-#    goos: linux
-#    goarch: arm
-#    goarm: 6
-#    binaries:
-#      - asws
-#    dockerfile: dockerfiles/arm/Dockerfile
-#    builds:
-#      - asws
-#    extra_files:
-#      - www
-#      - files
-#    image_templates:
-#      - "txn2/asws:armhf-latest"
-#      - "txn2/asws:armhf-{{ .Tag }}"
-#      - "txn2/asws:armhf-v{{ .Major }}"
-#    build_flag_templates:
-#      - "--label=org.label-schema.schema-version=1.0"
-#      - "--label=org.label-schema.version={{.Version}}"
-#      - "--label=org.label-schema.name={{.ProjectName}}"
+  -
+    goos: linux
+    goarch: amd64
+    goarm: ''
+    ids:
+      - asws
+    dockerfile: dockerfiles/alpine/Dockerfile
+    extra_files:
+      - www
+      - files
+    image_templates:
+      - "txn2/asws:latest-alpine"
+      - "txn2/asws:{{ .Tag }}-alpine"
+      - "txn2/asws:v{{ .Major }}-alpine-3"
+      - "txn2/asws:amd64-{{ .Tag }}-alpine-3"
+    build_flag_templates:
+      - "--label=org.label-schema.schema-version=1.0"
+      - "--label=org.label-schema.version={{.Version}}"
+      - "--label=org.label-schema.name={{.ProjectName}}"

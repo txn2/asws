@@ -30,6 +30,8 @@ var (
 	debugEnv                = getEnv("DEBUG", "false")
 	metricsEnv              = getEnv("METRICS", "true")
 	metricsPortEnv          = getEnv("METRICS_PORT", "2112")
+	webAppNameEnv           = getEnv("WEB_APP_NAME", "")
+	webAppVersionEnv        = getEnv("WEB_APP_VERSION", "")
 )
 
 var Version = "0.0.0"
@@ -51,6 +53,8 @@ func main() {
 		debug                = flag.String("debug", debugEnv, "debug")
 		metrics              = flag.String("metrics", metricsEnv, "metrics")
 		metricsPort          = flag.String("metricsPort", metricsPortEnv, "metrics port")
+		webAppName           = flag.String("webAppVersion", webAppNameEnv, "web app name (for logging)")
+		webAppVersion        = flag.String("webAppVersion", webAppVersionEnv, "web app version (for logging)")
 	)
 	flag.Parse()
 
@@ -77,11 +81,17 @@ func main() {
 	zapCfg.DisableCaller = true
 	zapCfg.DisableStacktrace = true
 
-	logger, _ := zapCfg.Build()
+	baseLogger, _ := zapCfg.Build()
 
 	if *debug == "true" {
-		logger, _ = zap.NewDevelopment()
+		baseLogger, _ = zap.NewDevelopment()
 	}
+
+	logger := baseLogger.With(
+		zap.String("asws_version", Version),
+		zap.Stringp("web_app_name", webAppName),
+		zap.Stringp("web_app_version", webAppVersion),
+	)
 
 	r.Use(ginzap.Ginzap(logger, time.RFC3339, true))
 
@@ -121,7 +131,6 @@ func main() {
 
 			logger.Info("Starting ASWS Metrics Server",
 				zap.String("type", "start_asws_metrics"),
-				zap.String("version", Version),
 				zap.String("port", *metricsPort),
 				zap.String("ip", *ip),
 			)
@@ -136,7 +145,6 @@ func main() {
 
 	logger.Info("Starting ASWS Server",
 		zap.String("type", "start_asws"),
-		zap.String("version", Version),
 		zap.String("port", *port),
 		zap.String("ip", *ip),
 	)

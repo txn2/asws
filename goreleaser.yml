@@ -94,7 +94,7 @@ dockers:
       - "txn2/asws:latest-alpine"
       - "txn2/asws:{{ .Tag }}-alpine"
       - "txn2/asws:v{{ .Major }}-alpine-3"
-      - "txn2/asws:amd64-{{ .Tag }}-alpine-3"
+      - "txn2/asws:{{ .Tag }}-alpine-3"
     build_flag_templates:
       - "--label=org.label-schema.schema-version=1.0"
       - "--label=org.label-schema.version={{.Version}}"

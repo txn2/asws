@@ -24,6 +24,7 @@ var (
 	notFoundRedirectEnv     = getEnv("NOT_FOUND_REDIRECT", "false")
 	notFoundRedirectPathEnv = getEnv("NOT_FOUND_REDIRECT_PATH", "/")
 	notFoundFileEnv         = getEnv("NOT_FOUND_FILE", "./www/404.html")
+	spaFallbackEnv          = getEnv("SPA_FALLBACK", "false")
 	fsEnabledEnv            = getEnv("FS_ENABLED", "false")
 	fsDirEnv                = getEnv("FS_DIR", "./files")
 	fsPathEnv               = getEnv("FS_PATH", "/files")
@@ -47,6 +48,7 @@ func main() {
 		notFoundRedirect     = flag.String("notFoundRedirect", notFoundRedirectEnv, "redirect on not found?")
 		notFoundRedirectPath = flag.String("notFoundRedirectPath", notFoundRedirectPathEnv, "not found redirect path")
 		notFoundFile         = flag.String("notFoundFile", notFoundFileEnv, "not found file to serve")
+		spaFallback          = flag.String("spaFallback", spaFallbackEnv, "SPA fallback mode (serve index.html on 404)")
 		fsEnabled            = flag.String("fsEnabled", fsEnabledEnv, "filesystem enabled")
 		fsDir                = flag.String("fsDir", fsDirEnv, "filesystem directory")
 		fsPath               = flag.String("fsPath", fsPathEnv, "filesystem path")
@@ -102,12 +104,35 @@ func main() {
 	r.Static(*staticPath, *staticDir)
 
 	r.NoRoute(func(c *gin.Context) {
+		// SPA fallback mode - serve index.html with 200 status for non-file requests
+		if *spaFallback == "true" {
+			indexPath := *staticDir + "/index.html"
+			content, err := os.ReadFile(indexPath)
+			if err != nil {
+				logger.Error("SPA index.html not found", zap.String("file", indexPath))
+				c.String(http.StatusNotFound, http.StatusText(http.StatusNotFound))
+				return
+			}
+
+			c.Writer.WriteHeader(http.StatusOK) // Important: 200 not 404
+			c.Writer.Header().Set("Content-Type", "text/html; charset=utf-8")
+			_, err = c.Writer.Write(content)
+			if err != nil {
+				logger.Error("SPA write error", zap.Error(err))
+				c.String(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
+				return
+			}
+			return
+		}
+
+		// Redirect mode (existing functionality)
 		if *notFoundRedirect == "true" {
 			c.Redirect(http.StatusTemporaryRedirect, *notFoundRedirectPath)
 			c.Abort()
 			return
 		}
 
+		// Custom 404 file mode (existing functionality)
 		content, err := os.ReadFile(*notFoundFile)
 		if err != nil {
 			logger.Error("404 content not found", zap.String("file", *notFoundFile))

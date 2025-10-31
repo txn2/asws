@@ -1,5 +1,7 @@
 .idea
+.claude
 dist
+asws
 
 # Binaries for programs and plugins
 *.exe
